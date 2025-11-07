@@ -82,39 +82,41 @@ class vh_env(gym.Env):
         obs = np.array([com_z_vel, ground_reaction_force, self.phases[0], self.phases[1]], dtype=np.float32)
         return obs
     
-    #ステップ処理
+    def compute_jacobian(self):
+        """足先のヤコビアン行列を計算"""
+        # 足先（shank）のjacobian
+        jacp = np.zeros((3, self.model.nv))  # 位置ヤコビアン
+        jacr = np.zeros((3, self.model.nv))  # 回転ヤコビアン
+    
+        # shankの最後のボディのIDを取得
+        end_effector_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "shank")
+    
+        # ヤコビアン計算
+        mujoco.mj_jacBody(self.model, self.data, jacp, jacr, end_effector_id)
+    
+        return jacp  # 位置ヤコビアンのみ返す
+
     def step(self, action):
-        action = np.asarray((action), dtype=np.float32)
-        #行動のクリッピング
-        action = np.clip(action, self.action_space.low, self.action_space.high)
-
-        #地面反力の取得
-        try:
-            ground_reaction_force = float(np.sum(self.data.cfrc_ext[:, 2]))  #z方向成分の合計
-        except Exception as e:
-            ground_reaction_force = 0.0 # エラー時は0に設定
-
-        #CPGの位相更新
-        delta = self.phases[1] - self.phases[0]
-        coupling = np.zeros_like(self.phases) # 結合項の初期化
-        coupling[0] = self.K * np.sin(delta)
-        coupling[1] = self.K * np.sin(-delta)
-
-        #フィードバック
-        feedback_scalar = 0.0
-        if ground_reaction_force > 1e-3:  # 閾値を超えたらフィードバックを与える
-            feedback_scalar = 0.5  # フィードバックの強さ
-        
-        phi_dot = self.omega + coupling + feedback_scalar * action # 位相速度の計算
-        self.phases = (self.phases + phi_dot * self.dt) % (2 * np.pi) # 位相の更新
-
-        #CPGからアクチュエータへ
-        amplitude = 100.0  # アクチュエータへの出力振幅
-        desired = amplitude * np.sin(self.phases) # アクチュエータの目標位置
-        ctrl = np.zeros(self.model.nu, dtype=np.float32)  # アクチュエータ数に合わせた制御入力の初期化
-        n_write = min(self.model.nu, desired.shape[0])  # 書き込む要素数の決定
-        ctrl[:n_write] = desired[:n_write]  # 目標位置を制御入力に設定
+           
+        # CPGの出力から目標力を計算
+        max_force = 200.0  # 最大力[N]
+        desired_force = np.array([0, 0, max_force * np.sin(self.phases[0])])  # z方向の力
+    
+        # ヤコビアン計算
+        J = self.compute_jacobian()
+    
+        # トルク計算 (τ = J^T * F)
+        joint_torques = np.dot(J.T, desired_force)
+    
+        # アクチュエータ制御
+        ctrl = np.zeros(self.model.nu, dtype=np.float32)
+        n_write = min(self.model.nu, 2)  # 股関節と膝関節の2つ
+        ctrl[:n_write] = joint_torques[:n_write]
         self.data.ctrl[:] = ctrl
+ 
+        #ジャンプ時トルク0
+        if float(np.sum(self.data.cfrc_ext[:, 2])) = 0:
+            ctrl[:] = 0
 
         mujoco.mj_step(self.model, self.data)
         
