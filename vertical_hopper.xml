@@ -1,0 +1,118 @@
+<mujoco model="vertcal_hopper">
+  <compiler angle="degree" coordinate="local"/>
+  <!--compiler>
+  <lengthrange mode='none'/>
+  </compiler-->
+  <default>
+    <joint armature="0.01" damping="1" limited="true"/>
+    <!-- contact impedance can be changed through adjusting solimp -->
+    <!-- timeconst is very very very very important!!!!!!!!!!!!!!!!!!!!!!!! -->
+    <!-- <geom conaffinity="0" condim="3" contype="1" density="1000" friction="1.0 0.1 0.1" rgba="0.8 0.6 .4 1" solimp="0. 0.99 0.025 0.01 2" solref="0.25 5.0"/> -->
+    <geom conaffinity="0" condim="3" contype="1" density="1000" friction="1.0 0.1 0.1" rgba="0.8 0.6 .4 1" solimp="0. 0.99 0.025 0.01 2" solref="0.15 5.0"/>
+  </default>
+  <option integrator="Euler" timestep="0.001250"/>
+  <asset>
+        <texture builtin="gradient" height="100" rgb1="1 1 1" rgb2="0 0 0" type="skybox" width="100"/>
+        <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
+        <texture builtin="checker" height="100" name="texplane" rgb1="0 0 0" rgb2="0.8 0.8 0.8" type="2d" width="100"/>
+        <material name="MatPlane" reflectance="0.5" shininess="1" specular="1" texrepeat="480 1.5" texture="texplane"/>
+        <material name="geom" texture="texgeom" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <light cutoff="30" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1" pos="0 0 1.3" specular=".1 .1 .1"/>
+    <!-- <geom friction="1" conaffinity="1" condim="3" name="floor" pos="5 0 0" rgba="0.8 0.9 0.8 1" size="120 0.5 40" type="plane" material="MatPlane" axisangle="0 -1 0 1."/> -->
+    <geom friction="1" conaffinity="1" condim="3" name="floor2" pos="0 0 0" rgba="0.8 0.9 0.8 1" size="120 0.5 40" type="plane" material="MatPlane"/>
+    
+      <body name="camera" pos="0. -3.0 0">   
+      <camera name="track" mode="trackcom" pos="0 0 0.765" xyaxes="1 0 0 0 0 1"/>
+      <joint armature="0" axis="1 0 0" damping="0" limited="false" name="camerax" pos="0 0 0" type="slide"/>
+      <geom friction="0.9" name="camera_geom" pos="-0.3 0 0" size="0.05" type="sphere" mass="0.000001" rgba='0.5 0.5 0.5 1'/>
+      </body>
+          
+
+      <body name="center" pos="0 0 0.965">  
+      <geom friction="1" name="center_geom"  pos="0 0 0" type="sphere" mass="0.1" size='0.001'/>
+      <camera name="track2" mode="trackcom" pos="0 -2.8 -0.2" xyaxes="1 0 0 0 0 1"/>
+      <!-- <joint armature="0" axis="1 0 0" damping="0" limited="false" name="rootx" pos="0 0 0" type="slide"/> -->
+      <joint armature="0" axis="0 0 1" damping="0" limited="false" name="rootz" pos="0 0 0" type="slide"/>
+      <site name="s_hip" pos="0 0 0" size="0.005"/>
+
+      <body name="hat1" pos="0 0 0">  
+      <geom friction="1" name="hat_geom"  pos="0 0 0.40" type="box" mass="53.5" size='0.05 0.05 0.40' rgba="0.6 0.5 .3 1"/>
+      <!-- <joint armature="0.2" axis="0 1 0" damping="0" limited="true" range="-20 50" name="torso_joint" pos="0 0 0" stiffness="0" type="hinge"/> -->
+      <geom friction="1" name="hip_geom"  pos="0 0 0" type="cylinder" mass="0" size='0.06' fromto='0 -0.06 0 0 0.06 0'rgba="0.8 0.5 .3 1"/>
+      </body>
+
+        <body name='thigh' pos='0 0 -0.'>
+        <geom friction="1" pos="0 0 -0.25" name="thigh_geom" size="0.045 0.045 0.25" type="box" mass="17.0" />
+        <joint axis="0 -1 0" stiffness="0" damping="0" armature="0.2" limited="true" range="-90 90" name="hip_joint" pos="0 0 0" type="hinge"/>
+        <geom friction="1" name="knee_geom" type="cylinder" size="0.055" mass="0" fromto='0 -0.045 -0.5 0 0.045 -0.5'group='1'/>
+
+        <body name="shank" pos="0 0 -0.5">
+        <geom friction="1" pos="0 0 -0.225" name="shank_geom" type="box" size="0.03 0.03 .21" mass="3.5"/>
+        <joint axis="0 -1 0" stiffness="0" damping="0" armature="0.2" limited="true" range="-135 0" name="knee_joint" pos="0 0 0" type="hinge"/>
+        <site name="s_knee" pos="0 0 0" size="0.005"/>
+
+        <body name="foot" pos="0 0 -0.4">
+        <joint axis="0 -1 0" stiffness="0" damping="0" armature="0.2" limited="true" range="-90 90" name="ankle_joint" pos="0 0 0" type="hinge"/>
+        <site name="s_ankle" pos="0 0 0" size="0.011"/>
+        <geom friction="1.0 0.005 0.0001" name="right_heel_geom" type="cylinder" size="0.02" fromto="-0.02 -0.05 -0.04 -0.02 0.05 -0.04" mass="0.2"/>
+        <!-- <geom friction="1.0 0.005 0.0001" name="right_foot_geom" type="box" pos="0.045 0 -0.04" size="0.065 0.05 0.02" mass="0.8" solimp="0.8 0.95 0.01 0.5 2" solref="0.01 1.0"/> -->
+        <geom friction="1.0 0.005 0.0001" name="right_foot_geom" type="box" pos="0.07125 0 -0.04" size="0.09125 0.05 0.02" mass="1.25" solimp="0. 0.99 0.01 0.01 2" solref="0.01 1.0"/>
+        <site name="s_toe" pos="0.1625 0 -0.06" size="0.011"/>
+        
+        <!-- <body name="toe" pos="0.11 0 -0.05">
+        <site name="s_toe" pos="0.0525 0 0" size="0.011"/>
+        <geom friction="1.0 0.005 0.0001" name="right_toe_geom" type="box" pos="0.02625 0 0" size="0.02625 0.05 0.01" mass="0.25" solimp="0. 0.99 0.01 0.01 2" solref="0.01 1.0"/>
+        <joint axis="0 -1 0" stiffness="30" damping="0" armature="0.2" limited="true" range="0 1" name="toe_joint" pos="0 0 -0.01" type="hinge"/>
+
+        </body> -->
+        </body>
+        </body>
+        </body>
+        
+        <!-- <body name='left_thigh' pos='0 0.09 -0.'>
+        <geom friction="1" pos="0 0 -0.25" name="left_thigh_geom" size="0.045 0.045 0.25" type="box" mass="8.5" rgba="0.95 0.6 .4 1"/>
+        <joint axis="0 -1 0" stiffness="0" damping="0" armature="0.2" limited="true" range="-90 90" name="left_hip_joint" pos="0 0 0" type="hinge"/>
+        <geom friction="1" name="left_knee_geom" type="cylinder" size="0.055" mass="0" fromto='0 -0.045 -0.5 0 0.045 -0.5'group='1' rgba="0.95 0.6 .4 1"/> -->
+        
+        <!-- <body name="left_shank" pos="0 0 -0.5">
+        <geom friction="1" pos="0 0 -.225" name="left_shank_geom" type="box" size="0.03 0.03 .21" mass="3.5" rgba="0.95 0.6 .4 1"/>
+        <joint axis="0 -1 0" stiffness="0" damping="0" armature="0.2" limited="true" range="-135 0" name="left_knee_joint" pos="0 0 0" type="hinge"/>
+        <site name="s_left_knee" pos="0 0 0" size="0.005"/> -->
+
+        <!-- <body name="left_foot" pos="0 0 -0.4">
+        <joint axis="0 -1 0" stiffness="0" damping="0" armature="0.2" limited="true" range="-90 90" name="left_ankle_joint" pos="0 0 0" type="hinge"/>
+        <site name="s_left_ankle" pos="0 0 0" size="0.011"/> 
+        <geom friction="1.0 0.005 0.0001" name="left_heel_geom" type="cylinder" size="0.02" fromto="-0.02 -0.05 -0.04 -0.02 0.05 -0.04" mass="0.2" rgba="0.95 0.6 .4 1"/> -->
+        <!-- <geom friction="1.0 0.005 0.0001" name="left_foot_geom" type="box" pos="0.045 0 -0.04" size="0.065 0.05 0.02" mass="0.8" rgba="0.95 0.6 .4 1" solimp="0.8 0.95 0.01 0.5 2" solref="0.01 1.0"/> -->
+        <!-- <geom friction="1.0 0.005 0.0001" name="left_foot_geom" type="box" pos="0.07125 0 -0.04" size="0.09125 0.05 0.02" mass="1.25" rgba="0.95 0.6 .4 1" solimp="0. 0.99 0.01 0.01 2" solref="0.01 1.0"/>
+        <site name="s_left_toe" pos="0.1625 0 -0.06" size="0.011"/> -->
+
+        <!-- <body name="left_toe" pos="0.11 0 -0.05">
+        <site name="s_left_toe" pos="0.0525 0 0" size="0.011"/>
+        <geom friction="1.0 0.005 0.0001" name="left_toe_geom" type="box" pos="0.02625 0 0" size="0.02625 0.05 0.01" mass="0.25" rgba="0.95 0.6 .4 1" solimp="0. 0.99 0.01 0.01 2" solref="0.01 1.0"/>
+        <joint axis="0 -1 0" stiffness="30" damping="0" armature="0.2" limited="true" range="0 1" name="left_toe_joint" pos="0 0 -0.01" type="hinge"/>
+
+        </body> 
+        </body>
+        </body>
+        </body> -->
+
+    </body>
+  </worldbody>
+
+
+  <!--"geer" here is the maximum output of the actuator-->
+  <actuator>
+    <!-- <motor name="torso_joint"       gear="200"  joint="torso_joint"/> -->
+    <motor name="hip_joint"         gear="200"  joint="hip_joint"/>
+    <motor name="knee_joint"        gear="200"  joint="knee_joint"/>
+    <!-- <motor name="ankle_joint"       gear="200"  joint="ankle_joint"/>
+    <motor name="left_hip_joint"    gear="200"  joint="left_hip_joint"/>
+    <motor name="left_knee_joint"   gear="200"  joint="left_knee_joint"/>
+    <motor name="left_ankle_joint"  gear="200"  joint="left_ankle_joint"/> -->
+  </actuator>
+
+    
+</mujoco>
