@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+Tegotae-RL/
+
+# VSCode
+.vscode/
+
+# RL outputs
+logs/
+results/
+tensorboard/
+
+# Videos
+*.mp4
+*.avi
+*.gif
+
+# Large data
+*.zip
+*.npy
+
+# Mujoco cache
+.mujoco/
+
+# OS files
+.DS_Store
+Thumbs.db

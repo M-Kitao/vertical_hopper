@@ -1,0 +1,6 @@
+Condition,Mean_reward,Std_reward,N
+full_model,11.3,1.08,3
+no_gain_net,12.19,2.61,3
+no_reaction_net,9.87,2.15,3
+no_action_net,8.51,2.15,3
+no_cpg_modulation,10.33,2.78,3

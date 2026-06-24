@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+
+venv/
+Tegotae-RL/
+
+logs/
+tensorboard/
+
+*.zip
+*.pth
+*.pt
+
+results/
+models/
+^

@@ -1,0 +1,2 @@
+% # columns="iteration, evaluation, sigma, axis ratio, bestever, best, median, worst objective function value, interquartile range, 25%tile, current best feasible f-value, further/more values", seed=867792, Mon Dec 15 18:20:56 2025, <python>{}</python>
+1 8 0.04708929018114406 1.0000488107150136 1000.0 1.0000000000000000e+03 1000.0 1000.0 0.0 1000.0 nan   

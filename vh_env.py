@@ -30,16 +30,16 @@ class vh_env(gym.Env):
         else:
             self.viewer = None
 
-        #観測空間の定義[z軸速度、地面反力、CPG状態1、CPG状態2]
-        obs_low  = np.array([-10.0, 0.0, 0.0, 0.0], dtype=np.float32)
-        obs_high = np.array([10.0, 1000.0, 2*np.pi, 2*np.pi], dtype=np.float32)
+        #観測空間の定義[z軸速度、地面反力、CPG状態]
+        obs_low  = np.array([-10.0, 0.0, 0.0], dtype=np.float32)
+        obs_high = np.array([10.0, 1000.0, 2*np.pi], dtype=np.float32)
         self.observation_space = spaces.Box(low=obs_low, high=obs_high, dtype=np.float32)
 
-        #行動空間の定義[CPG状態変化量1、CPG状態変化量2]
+        #行動空間の定義[CPG状態変化量]
         self.action_space = spaces.Box(low=0.0, high=2*np.pi, shape=(2,), dtype=np.float32)
 
         #CPG
-        self.num_oscillators = 2
+        self.num_oscillators = 1
         self.phases = np.random.uniform(0, 2*np.pi, size=(self.num_oscillators,))  # 初期位相
         self.omega = np.array([2.0, 2.0])  # 固有振動数
         self.K = 1.0  # 結合強度
@@ -73,13 +73,13 @@ class vh_env(gym.Env):
         try:
             com_z_vel = self.data.subtree_linvel[0][2]  # z軸速度
         except Exception as e:
-            com_z_vel = float(self.data.qvel[1]) if self.data.qvel.shape[0] > 1 else 0.0 # エラー時はqvelから代替取得
+            com_z_vel = float(self.data.qvel[0]) if self.data.qvel.shape[0] > 1 else 0.0 # エラー時はqvelから代替取得
         #地面反力
         try:
             ground_reaction_force = float(np.sum(self.data.cfrc_ext[:, 2]))  #z方向成分の合計
         except Exception as e:
             ground_reaction_force = 0.0 # エラー時は0に設定
-        obs = np.array([com_z_vel, ground_reaction_force, self.phases[0], self.phases[1]], dtype=np.float32)
+        obs = np.array([com_z_vel, ground_reaction_force, self.phases[0]], dtype=np.float32)
         return obs
     
     def compute_jacobian(self):
@@ -115,7 +115,7 @@ class vh_env(gym.Env):
         self.data.ctrl[:] = ctrl
  
         #ジャンプ時トルク0
-        if float(np.sum(self.data.cfrc_ext[:, 2])) = 0:
+        if float(np.sum(self.data.cfrc_ext[:, 2])) < 1e-8:
             ctrl[:] = 0
 
         mujoco.mj_step(self.model, self.data)
@@ -151,8 +151,8 @@ class vh_env(gym.Env):
                 self.prev_apex_z = com_z  # 現在の頂点z位置を保存
 
         #CPG同期度合いの報酬
-        sync = 1.0 - np.abs(np.sin(self.phases[0] - self.phases[1]))
-        reward += sync * 0.1  # 同期度合いに基づく報酬
+        #sync = 1.0 - np.abs(np.sin(self.phases[0] - self.phases[1]))
+        #reward += sync * 0.1  # 同期度合いに基づく報酬
 
         self.prev_com_z = com_z
 
@@ -160,7 +160,7 @@ class vh_env(gym.Env):
         terminated = False
         truncated = False # タイムアウトは無し
 
-        if com_z is None or com_z < 0.01:  # COMのz位置が低すぎる場合
+        if com_z is None or com_z < -0.5 or com_z > 3.0:  # COMのz位置が低すぎる場合
             terminated = True
             print("エピソード終了：転倒検出 com_z =", com_z)
 
